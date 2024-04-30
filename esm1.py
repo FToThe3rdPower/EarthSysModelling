@@ -66,7 +66,7 @@ for nt in range(1,numTimeSteps):
 		uLeapFrogArr[nt] = fCor*vLeapFrogArr[nt-1]*2*dt + uLeapFrogArr[nt-2] 
 		vLeapFrogArr[nt] = -fCor*uLeapFrogArr[nt-1]*2*dt + vLeapFrogArr[nt-2]
 	
-	
+
 	#heun scheme
 	#!!!
 
@@ -103,6 +103,7 @@ plt.plot(timeArr, uAnaArr, "m", label="Analytical")
 plt.legend()
 
 ##plot heun scheme
+
 
 ##plot matsuno scheme
 
