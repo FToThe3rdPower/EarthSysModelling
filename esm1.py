@@ -66,9 +66,24 @@ for nt in range(1,numTimeSteps):
 		uLeapFrogArr[nt] = fCor*vLeapFrogArr[nt-1]*2*dt + uLeapFrogArr[nt-2] 
 		vLeapFrogArr[nt] = -fCor*uLeapFrogArr[nt-1]*2*dt + vLeapFrogArr[nt-2]
 	
-
 	#heun scheme
-	#!!!
+	#
+	# Heun scheme
+	uHeunPred = uHeunArr[nt-1] + (fCor * vHeunArr[nt-1] * dt)
+	vHeunPred = vHeunArr[nt-1] - (fCor * uHeunArr[nt-1] * dt)
+	uHeunArr[nt] = uHeunArr[nt-1] + (fCor * (vHeunPred + vHeunArr[nt-1]) * 0.5 * dt)
+	vHeunArr[nt] = vHeunArr[nt-1] - (fCor * (uHeunPred + uHeunArr[nt-1]) * 0.5 * dt)
+	heunErrArr[nt] = np.abs(uHeunArr[nt] - uAnaArr[nt])
+
+	#matsuno
+	# Matsuno scheme
+	if nt == 1:
+	    vMatsunoArr[1] = vEulerArr[nt]
+	    print("Matsuno IC #2 trig")
+	else:
+	    uMatsunoArr[nt] = uMatsunoArr[nt-2] + 2 * (fCor * vMatsunoArr[nt-1] * dt)
+	    vMatsunoArr[nt] = vMatsunoArr[nt-1] - (fCor * (uMatsunoArr[nt-2] + uMatsunoArr[nt]) * dt)
+	matsunoErrArr[nt] = np.abs(uMatsunoArr[nt] - uAnaArr[nt])
 
 
 	#getting the analytical answer for this step
@@ -93,13 +108,15 @@ plt.plot(timeArr, uAnaArr, "r", label="Analytical")
 # !!! put the other methods here too
 plt.legend()
 
-##plotting the central diff scheme
-plt.figure("Oscillation: center diff vs analytical")
-plt.title("Center diff vs analytical")
+##plotting the other schemes
+plt.figure("Oscillation: others vs analytical")
+plt.title("Cd vs Heun vs Matsuno vs analytical")
 plt.xlabel("time\n(s)")
 plt.ylabel("u\n(m/s)")
 plt.plot(timeArr, uLeapFrogArr, ".c", label="Leapfrog")
-plt.plot(timeArr, uAnaArr, "m", label="Analytical")
+plt.plot(timeArr, uHeunArr, ".m", label="Heun")
+#plt.plot(timeArr, uMatsunoArr, ".y", label="Matsuno")
+plt.plot(timeArr, uAnaArr, "k", label="Analytical")
 plt.legend()
 
 ##plot heun scheme
@@ -109,11 +126,19 @@ plt.legend()
 
 #plotting the error (difference between the model and analytical solution)
 plt.figure("Error comparison")
-plt.title("error")
+plt.title("Euler error")
 plt.xlabel("time\n(s)")
 plt.ylabel("error (m/s)")
-plt.plot(timeArr, eulerErrArr, ".g", label="Euler")
-plt.plot(timeArr, leapFrogErrArr, ".k", label="leapfrog")
+plt.plot(timeArr, eulerErrArr, ".r", label="Euler")
+plt.legend()
+
+plt.figure("other errors")
+plt.title("Cd vs Heun vs Matsuno error")
+plt.xlabel("time\n(s)")
+plt.ylabel("error (m/s)")
+plt.plot(timeArr, leapFrogErrArr, ".g", label="leapfrog")
+plt.plot(timeArr, heunErrArr, ".r", label="Heun")
+#plt.plot(timeArr, matsunoErrArr, ".b", label="Matsuno")
 plt.legend()
 
 
