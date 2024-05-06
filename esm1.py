@@ -1,6 +1,9 @@
 #inertial oscillations exercise #1 ESM
 #euler example script
 
+#!!! put in a func so I can run it over different time lengths
+#!!! and vary the dt
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -72,25 +75,23 @@ for nt in range(1,numTimeSteps):
 		vLeapFrogArr[nt] = -fCor*uLeapFrogArr[nt-1]*2*dt + vLeapFrogArr[nt-2]
 	
 	#heun scheme
-	uHeunPred = uHeunArr[nt-1] + (fCor * vHeunArr[nt-1] * dt)
-	vHeunPred = vHeunArr[nt-1] - (fCor * uHeunArr[nt-1] * dt)
-	uHeunArr[nt] = uHeunArr[nt-1] + (fCor * (vHeunPred + vHeunArr[nt-1]) * 0.5 * dt)
-	vHeunArr[nt] = vHeunArr[nt-1] - (fCor * (uHeunPred + uHeunArr[nt-1]) * 0.5 * dt)
+	uHeunPred = uHeunArr[nt-1] + (fCor * dt * vHeunArr[nt-1])
+	vHeunPred = vHeunArr[nt-1] - (fCor * dt * uHeunArr[nt-1])
+	uHeunArr[nt] = uHeunArr[nt-1] + (fCor * 0.5 * dt * (vHeunPred + vHeunArr[nt-1]))
+	vHeunArr[nt] = vHeunArr[nt-1] - (fCor * 0.5 * dt * (uHeunPred + uHeunArr[nt-1]))
 
 	#matsuno
-	if nt == 1:
-	    vMatsunoArr[1] = vEulerArr[nt]
-	    print("Matsuno IC #2 trig")
-	else:
-	    uMatsunoArr[nt] = uMatsunoArr[nt-2] + 2 * (fCor * vMatsunoArr[nt-1] * dt)
-	    vMatsunoArr[nt] = vMatsunoArr[nt-1] - (fCor * (uMatsunoArr[nt-2] + uMatsunoArr[nt]) * dt)
-# !!! Add correction
+	uMatsunoPred = uMatsunoArr[nt-1] + (fCor * dt * vMatsunoArr[nt-1])
+	vMatsunoPred = vMatsunoArr[nt-1] - (fCor * dt * uMatsunoArr[nt-1])
+	uMatsunoArr[nt] = uMatsunoArr[nt-1] + (fCor * dt * vMatsunoPred)
+	vMatsunoArr[nt] = vMatsunoArr[nt-1] - (fCor * dt * uMatsunoPred)
+
 
 	#calculating energies
-	eulerEngArr[nt] = 0.5*(uEulerArr[nt]**2 + vEulerArr[nt]**2)
-	leapFrogEngArr[nt] = 0.5*(uLeapFrogArr[nt]**2 + vLeapFrogArr[nt]**2)
-	heunEngArr[nt] = 0.5*(uHeunArr[nt]**2 + vHeunArr[nt]**2)
-	matsunoEngArr[nt] = 0.5*(uMatsunoArr[nt]**2 + vMatsunoArr[nt]**2)
+	eulerEngArr[nt] = 0.5*np.abs(uEulerArr[nt]**2 + vEulerArr[nt]**2)
+	leapFrogEngArr[nt] = 0.5*np.abs(uLeapFrogArr[nt]**2 + vLeapFrogArr[nt]**2)
+	heunEngArr[nt] = 0.5*np.abs(uHeunArr[nt]**2 + vHeunArr[nt]**2)
+	matsunoEngArr[nt] = 0.5*np.abs(uMatsunoArr[nt]**2 + vMatsunoArr[nt]**2)
 
 	#getting the analytical answer for this step
 	uAnaArr[nt] = uAnaArr[0] * np.cos(fCor * timeArr[nt])
@@ -112,17 +113,17 @@ plt.title("Euler fwd vs Matsuno with analytical")
 plt.xlabel("time\n(s)")
 plt.ylabel("u\n(m/s)")
 plt.plot(timeArr, uEulerArr, '.b', label="Euler")
-plt.plot(timeArr, uMatsunoArr, ".y", label="Matsuno")
 plt.plot(timeArr, uAnaArr, "r", label="Analytical")
 plt.legend()
 
 ##plotting the other schemes
 plt.figure("Oscillation: others vs analytical")
-plt.title("Cd vs Heun with analytical")
+plt.title("leapfrog, Heun, matsuno vs analytical")
 plt.xlabel("time\n(s)")
 plt.ylabel("u\n(m/s)")
 plt.plot(timeArr, uLeapFrogArr, ".c", label="Leapfrog")
 plt.plot(timeArr, uHeunArr, ".m", label="Heun")
+plt.plot(timeArr, uMatsunoArr, ".y", label="Matsuno")
 plt.plot(timeArr, uAnaArr, "k", label="Analytical")
 plt.legend()
 
@@ -139,21 +140,20 @@ plt.legend()
 
 ##plotting the error (difference between the model and analytical solution)
 plt.figure("Error comparison")
-plt.title("Euler and Matsuno error")
+plt.title("Euler  error")
 plt.xlabel("time\n(s)")
 plt.ylabel("error (m/s)")
 plt.semilogy(timeArr, eulerErrArr, ".r", label="Euler")
-plt.semilogy(timeArr, matsunoErrArr, ".b", label="Matsuno")
 plt.legend()
 
-plt.figure("Other errors")
-plt.title("Cd vs Heun error")
+plt.figure("Leapfrog Heun Matsuno vs analytical errors")
+plt.title("Leapfrog, Heun, Matsuno, vs analytical error")
 plt.xlabel("time\n(s)")
 plt.ylabel("error (m/s)")
 plt.plot(timeArr, leapFrogErrArr, ".g", label="leapfrog")
 plt.plot(timeArr, heunErrArr, ".r", label="Heun")
+plt.plot(timeArr, matsunoErrArr, ".b", label="Matsuno")
 plt.legend()
-
 
 
 ##Don't forget to show 'em if you got 'em
