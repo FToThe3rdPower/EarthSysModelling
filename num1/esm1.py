@@ -138,16 +138,17 @@ plt.close("all")
 
 
 ##plotting the estimated oscillation vs the actual
-plt.figure("Zonal Velocity v time: Leapfrog, Heun, Matsuno vs analytical")
-plt.title("Zonal Velocity v time:\nLeapfrog, Heun, Matsuno vs analytical\n#Tsteps = "
+plt.figure("Zonal Velocity v time: Euler, Leapfrog, Heun, Matsuno vs analytical")
+plt.title("Zonal Velocity v time:\nEuler, Leapfrog, Heun, Matsuno vs analytical\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
 plt.xlabel("time\n(s)")
 plt.ylabel("u\n(m/s)")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[1], "k", label="Analytical")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[2], '.b', label="Euler")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[3], "xc", label="Leapfrog")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[4], ".m", label="Heun")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[2], '.g', label="Euler")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[4], "xr", label="Heun")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[3], ".c", label="Leapfrog")
 plt.plot(arr4funcAtDT[0], arr4funcAtDT[5], ".y", label="Matsuno")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[1], "k", label="Analytical")
+
 plt.legend()
 
 ##energy plots
@@ -165,16 +166,16 @@ plt.legend()
 plt.figure("Kinetic Energy v time: Euler")
 plt.title("Kinetic Energy v time: Euler\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("time\n(m/s)")
+plt.xlabel("time\n(s)")
 plt.ylabel("Energy")
-plt.semilogy(arr4funcAtDT[0], eulerEngArr,".g", label="Euler")
-plt.semilogy(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
+plt.plot(arr4funcAtDT[0], eulerEngArr,".g", label="Euler")
+plt.plot(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
 plt.legend()
 
 plt.figure("Kinetic Energy v time: Matsuno")
 plt.title("Kinetic Energy v time: Matsuno\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("time\n(m/s)")
+plt.xlabel("time\n(s)")
 plt.ylabel("Energy")
 plt.plot(arr4funcAtDT[0], matsunoEngArr,".b", label="Matsuno")
 plt.plot(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
@@ -243,13 +244,6 @@ plt.plot(leapFrogErrVdt, "xr", label="leapfrog")
 plt.plot(matsunoErrVdt, ".b", label="matsuno")
 plt.legend()
 
-#plt.figure("Err v dt: mat")
-#plt.title("Model error v Timestep\n#Tsteps = "
-#	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-#plt.xlabel("dt\n(x100)")
-#plt.ylabel("np.avg(Model's error array)")
-#plt.plot(matsunoErrVdt, "x", label="matsuno")
-#plt.legend()
 
 ##Don't forget to show 'em if you got 'em
 plt.show()
