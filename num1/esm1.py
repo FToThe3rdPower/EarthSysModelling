@@ -8,9 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #sim vars & consts
-numberOfTimeSteps = 800 #s
-dt = 200.0 #s
-frequency = 0.001 #Hz
+numberOfTimeSteps = 500
+dt = 200 #s
+frequency = 0.00011 #Hz
 initCond  = 10.0
 sizeOfDTStep = 100
 dtStart = sizeOfDTStep
@@ -138,26 +138,16 @@ plt.close("all")
 
 
 ##plotting the estimated oscillation vs the actual
-
-plt.figure("Oscillation: Euler fwd vs analytical")
-plt.title("Euler fwd vs  analytical\n#Tsteps = "
-	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("time\n(s)")
-plt.ylabel("u\n(m/s)")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[2], '.b', label="Euler")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[1], "r", label="Analytical")
-plt.legend()
-
-##plotting the other schemes vs analytical
 plt.figure("Zonal Velocity v time: Leapfrog, Heun, Matsuno vs analytical")
 plt.title("Zonal Velocity v time:\nLeapfrog, Heun, Matsuno vs analytical\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
 plt.xlabel("time\n(s)")
 plt.ylabel("u\n(m/s)")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[3], ".c", label="Leapfrog")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[1], "k", label="Analytical")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[2], '.b', label="Euler")
+plt.plot(arr4funcAtDT[0], arr4funcAtDT[3], "xc", label="Leapfrog")
 plt.plot(arr4funcAtDT[0], arr4funcAtDT[4], ".m", label="Heun")
 plt.plot(arr4funcAtDT[0], arr4funcAtDT[5], ".y", label="Matsuno")
-plt.plot(arr4funcAtDT[0], arr4funcAtDT[1], "k", label="Analytical")
 plt.legend()
 
 ##energy plots
@@ -166,9 +156,10 @@ plt.title("Kinetic Energy v time:\nLeapfrog vs Heun\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
 plt.xlabel("time\n(s)")
 plt.ylabel("Energy")
+plt.plot(arr4funcAtDT[0], leapFrogEngArr, "xr", label="Leapfrog")
+plt.plot(arr4funcAtDT[0], heunEngArr, ".b", label="Heun")
 plt.plot(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
-plt.plot(arr4funcAtDT[0], leapFrogEngArr, ".r", label="Leapfrog")
-plt.plot(arr4funcAtDT[0], heunEngArr, "xb", label="Heun")
+
 plt.legend()
 
 plt.figure("Kinetic Energy v time: Euler")
@@ -176,8 +167,8 @@ plt.title("Kinetic Energy v time: Euler\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
 plt.xlabel("time\n(m/s)")
 plt.ylabel("Energy")
-plt.semilogy(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
 plt.semilogy(arr4funcAtDT[0], eulerEngArr,".g", label="Euler")
+plt.semilogy(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
 plt.legend()
 
 plt.figure("Kinetic Energy v time: Matsuno")
@@ -185,8 +176,9 @@ plt.title("Kinetic Energy v time: Matsuno\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
 plt.xlabel("time\n(m/s)")
 plt.ylabel("Energy")
-plt.plot(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
 plt.plot(arr4funcAtDT[0], matsunoEngArr,".b", label="Matsuno")
+plt.plot(arr4funcAtDT[0], engAnaArr, "k", label="Analytic")
+
 plt.legend()
 
 ##plotting the error (difference between the model and analytical solution)
@@ -198,18 +190,22 @@ plt.ylabel("error (m/s)")
 plt.semilogy(arr4funcAtDT[0], eulerErrArr, ".r", label="Euler")
 plt.legend()
 
-plt.figure("Zonal Velocity error v time: Leapfrog, Heun, Matsuno, vs analytical")
-plt.title("Zonal Velocity error v time:\nLeapfrog, Heun, Matsuno, vs analytical\n#Tsteps = "
+plt.figure("Zonal Velocity error v time: Leapfrog, Heun vs analytical")
+plt.title("Zonal Velocity error v time:\nLeapfrog, Heun vs analytical\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
 plt.xlabel("time\n(s)")
 plt.ylabel("error (m/s)")
-plt.plot(arr4funcAtDT[0], leapFrogErrArr, ".g", label="leapfrog")
+plt.plot(arr4funcAtDT[0], leapFrogErrArr, "xg", label="leapfrog")
 plt.plot(arr4funcAtDT[0], heunErrArr, ".r", label="Heun")
-plt.plot(arr4funcAtDT[0], matsunoErrArr, ".b", label="Matsuno")
 plt.legend()
 
-print(heunErrArr)
-
+plt.figure("Zonal Velocity error v time: Matsuno vs analytical")
+plt.title("Zonal Velocity error v time:\nMatsuno vs analytical\n#Tsteps = "
+	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
+plt.xlabel("time\n(s)")
+plt.ylabel("error (m/s)")
+plt.plot(arr4funcAtDT[0], matsunoErrArr, ".b", label="Matsuno")
+plt.legend()
 
 #loop over a few dt options and 
 for nDT in rangeOfDt:
@@ -222,38 +218,38 @@ for nDT in rangeOfDt:
 	heunErrVdt[(nDT/sizeOfDTStep)-1] = np.mean(arrToChop[12])
 	matsunoErrVdt[(nDT/sizeOfDTStep)-1] = np.mean(arrToChop[13])
 
-
-plt.figure("Err v dt: heun")
+plt.figure("avg error v dt: euler")
 plt.title("Model error v Timestep\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("dt\n(x100)")
-plt.ylabel("np.avg(Model's error array)")
-plt.semilogy(heunErrVdt, "xg", label="heun")
-plt.legend()
-
-plt.figure("Err v dt: leapfrog")
-plt.title("Model error v Timestep\n#Tsteps = "
-	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("dt\n(x100)")
-plt.ylabel("np.avg(Model's error array)")
-plt.plot(leapFrogErrVdt, ".k", label="leapfrog")
-plt.legend()
-
-plt.figure("Err v dt: euler")
-plt.title("Model error v Timestep\n#Tsteps = "
-	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("dt\n(x100)")
+plt.xlabel("dt\n(x100 s)")
 plt.ylabel("np.avg(Model's error array)")
 plt.semilogy(eulerErrVdt, ".", label="euler")
 plt.legend()
 
-plt.figure("Err v dt: mat")
+plt.figure("avg error v dt: heun")
 plt.title("Model error v Timestep\n#Tsteps = "
 	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
-plt.xlabel("dt\n(x100)")
+plt.xlabel("dt\n(x100 s)")
 plt.ylabel("np.avg(Model's error array)")
-plt.plot(matsunoErrVdt, "x", label="matsuno")
+plt.semilogy(heunErrVdt, "xg", label="heun")
 plt.legend()
+
+plt.figure("avg error v dt: leapfrog and matsuno")
+plt.title("Model error v Timestep\n#Tsteps = "
+	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
+plt.xlabel("dt\n(x100 s)")
+plt.ylabel("np.avg(Model's error array)")
+plt.plot(leapFrogErrVdt, "xr", label="leapfrog")
+plt.plot(matsunoErrVdt, ".b", label="matsuno")
+plt.legend()
+
+#plt.figure("Err v dt: mat")
+#plt.title("Model error v Timestep\n#Tsteps = "
+#	+ str(numberOfTimeSteps) + " dt = " + str(dt) + " fCor = " + str(frequency) + " IC= " + str(initCond))
+#plt.xlabel("dt\n(x100)")
+#plt.ylabel("np.avg(Model's error array)")
+#plt.plot(matsunoErrVdt, "x", label="matsuno")
+#plt.legend()
 
 ##Don't forget to show 'em if you got 'em
 plt.show()
