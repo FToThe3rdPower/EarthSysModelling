@@ -1,8 +1,6 @@
 #inertial oscillations exercise #1 ESM
 #euler example script
 
-#!!! put in a func so I can run it over different time lengths
-#!!! and vary the dt
 
 import numpy as np
 import matplotlib.pyplot as plt
