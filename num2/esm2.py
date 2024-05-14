@@ -12,7 +12,7 @@ L = 2500 #km
 
 #D#efault dx = 25km, dckdt overflow occurs for dt > 1000s
 dx = 25 #km
-dt = 300 #s
+dt = 100 #s 300
 
 ##Number of dt, 1 cycle
 nt_len =  int((L/u0)/dt)
@@ -54,6 +54,7 @@ def LaxWendroff(dx,dt,nt_len):
         c_sol[n,:] = c_sol[n-1,:] - sigma/2 * (np.roll(c_sol[n-1,:],-1)-np.roll(c_sol[n-1,:],1)) + np.power(sigma,2)/2 * (np.roll(c_sol[n-1,:],-1)-2 * c_sol[n-1,:] + np.roll(c_sol[n-1,:],1))
     return c_sol
 
+#spectral derivative
 def dckdt(cks0):
     ks = np.arange(0, np.size(cks0))
     return -u0 * cks0 * 1j * 2 * np.pi * ks / L
@@ -78,6 +79,8 @@ def Spectral(dx,dt,nt_len):
     nx_len = int(2500/dx)
     nj_len = int(nx_len/2) + 1
     c_sol = np.zeros((nt_len + 1,nx_len))
+
+    #spectral coeff
     ck_sol = 1j *  np.zeros((nt_len + 1,nj_len))
     pulse_st_idx = int(np.floor(1125/dx + 1)-1)
     pulse_ed_idx = int(np.ceil(1375/dx)-1)
@@ -105,6 +108,7 @@ def Spectral(dx,dt,nt_len):
 c_sol_euler = EulerUpwind(dx,dt,nt_len)
 c_sol_LaxWendroff = LaxWendroff(dx,dt,nt_len)
 c_sol_Spectral = Spectral(dx,dt,nt_len)
+print(c_sol_Spectral)
 
 
 
@@ -131,17 +135,14 @@ cmax = np.amax(c_sol_euler)
 xx, tt = np.meshgrid(x_axis, t_axis)
 
 #plot the results
-colorMesh  = plt.pcolormesh(xx, tt, c_sol_euler, vmin=cmin, vmax=cmax)
+colorMesh  = plt.pcolormesh(xx, tt, c_sol_euler, cmap="ocean", vmin=cmin, vmax=cmax)
 
 #add the trace lines
-tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='w', lw=3)
-tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='w', lw=3)
-tracerline1_l = plt.plot(u0_tracer_l[np.where(u0_tracer_l > lidx)[0]], t_axis[np.where(u0_tracer_l > lidx)[0]], color='w', lw=3, ls=':')
-tracerline2_l = plt.plot(u0_tracer_l[np.where(u0_tracer_l < lidx)[0]], t_axis[np.where(u0_tracer_l < lidx)[0]], color='w', lw=3, ls=':')
-tracerline1_r = plt.plot(u0_tracer_r[np.where(u0_tracer_r > ridx)[0]], t_axis[np.where(u0_tracer_r > ridx)[0]], color='w', lw=3, ls=':')
-tracerline2_r = plt.plot(u0_tracer_r[np.where(u0_tracer_r < ridx)[0]], t_axis[np.where(u0_tracer_r < ridx)[0]], color='w', lw=3, ls=':')
+tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
+tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
+
 colorBar = plt.colorbar(colorMesh, orientation="vertical")
-colorBar.set_label(label='$C$\n($C_{0}$)')
+colorBar.set_label(label='\n$C$\n($C_{0}$)')
 plt.xlabel('x\n(km)')
 plt.ylabel('time\n(s)')
 
@@ -156,16 +157,13 @@ cmin = np.amin(c_sol_LaxWendroff)
 cmax = np.amax(c_sol_LaxWendroff)
 
 xx, tt = np.meshgrid(x_axis, t_axis)
-laxColorMesh = plt.pcolormesh(xx, tt, c_sol_LaxWendroff,  vmin=cmin, vmax=cmax)
-tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='w', lw=3)
-tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='w', lw=3)
-tracerline1_l = plt.plot(u0_tracer_l[np.where(u0_tracer_l > lidx)[0]], t_axis[np.where(u0_tracer_l > lidx)[0]], color='w', lw=3, ls=':')
-tracerline2_l = plt.plot(u0_tracer_l[np.where(u0_tracer_l < lidx)[0]], t_axis[np.where(u0_tracer_l < lidx)[0]], color='w', lw=3, ls=':')
-tracerline1_r = plt.plot(u0_tracer_r[np.where(u0_tracer_r > ridx)[0]], t_axis[np.where(u0_tracer_r > ridx)[0]], color='w', lw=3, ls=':')
-tracerline2_r = plt.plot(u0_tracer_r[np.where(u0_tracer_r < ridx)[0]], t_axis[np.where(u0_tracer_r < ridx)[0]], color='w', lw=3, ls=':')
+laxColorMesh = plt.pcolormesh(xx, tt, c_sol_LaxWendroff, cmap="ocean",  vmin=cmin, vmax=cmax)
+tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
+tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
 
+#colorBar setup
 laxColorBarf = plt.colorbar(laxColorMesh, orientation="vertical")
-laxColorBarf.set_label('$C$\n($C_{0}$)')
+laxColorBarf.set_label('\n$C$\n($C_{0}$)')
 plt.xlabel('x\n(km)')
 plt.ylabel('time\n(s)')
 
@@ -173,23 +171,20 @@ plt.ylabel('time\n(s)')
 
 #Spectral Hovmoller diagram
 plt.figure("SpectralHov")
-plt.title('Hovmoller diagram, Spectral')
+plt.title('Hovmoller diagram, Spectral, ')
 
 #normalize the colormap
 cmin = np.amin(c_sol_Spectral)
 cmax = np.amax(c_sol_Spectral)
 
 xx, tt = np.meshgrid(x_axis, t_axis)
-colourMesh = plt.pcolormesh(xx, tt, c_sol_Spectral, vmin=cmin, vmax=cmax)
+colourMesh = plt.pcolormesh(xx, tt, c_sol_Spectral, cmap = "ocean", vmin=cmin, vmax=cmax)
 tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='w', lw=3)
 tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='w', lw=3)
-tracerline1_l = plt.plot(u0_tracer_l[np.where(u0_tracer_l > lidx)[0]], t_axis[np.where(u0_tracer_l > lidx)[0]], color='w', lw=3, ls=':')
-tracerline2_l = plt.plot(u0_tracer_l[np.where(u0_tracer_l < lidx)[0]], t_axis[np.where(u0_tracer_l < lidx)[0]], color='w', lw=3, ls=':')
-tracerline1_r = plt.plot(u0_tracer_r[np.where(u0_tracer_r > ridx)[0]], t_axis[np.where(u0_tracer_r > ridx)[0]], color='w', lw=3, ls=':')
-tracerline2_r = plt.plot(u0_tracer_r[np.where(u0_tracer_r < ridx)[0]], t_axis[np.where(u0_tracer_r < ridx)[0]], color='w', lw=3, ls=':')
 
+#color setup
 cb = plt.colorbar(colourMesh, orientation="vertical")
-cb.set_label(label='$C$\n($C_{0}$)')
+cb.set_label(label='\n$C$\n($C_{0}$)')
 plt.xlabel('x\n(km)')
 plt.ylabel('time\n(s)')
 
