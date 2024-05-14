@@ -14,29 +14,32 @@ L = 2500 #km
 dx = 25 #km
 dt = 100 #s 300
 
+ridx = 1375
+cidx = 1250
+lidx = 1125
+
+
 ##Number of dt, 1 cycle
 nt_len =  int((L/u0)/dt)
+sigma = u0 * dt/dx #$\leq$ 1
 
 ##array setup
 t_hour = np.linspace(0, dt/3600 * (nt_len), nt_len + 1)
 t_axis = np.linspace(0, dt * nt_len, nt_len + 1)
 x_axis = np.linspace(0 + dx/2, L-dx/2, int(L/dx))
-cidx = 1250
+
 u0_tracer_c = np.mod(cidx + u0 * t_axis, L)
-lidx = 1125
 u0_tracer_l = np.mod(lidx + u0 * t_axis, L)
-ridx = 1375
 u0_tracer_r = np.mod(ridx + u0 * t_axis, L)
 
 
 #FUNCy town
 ##Diffusion and dispersion
 def EulerUpwind(dx,dt,nt_len):
-    sigma = u0 * dt/dx #$\leq$ 1
-    nx_len = int(2500/dx)
+    nx_len = int(L/dx)
     c_sol = np.zeros((nt_len + 1,nx_len))
-    pulse_st_idx = int(np.floor(1125/dx + 1)-1)
-    pulse_ed_idx = int(np.ceil(1375/dx)-1)
+    pulse_st_idx = int(np.floor(lidx/dx + 1)-1)
+    pulse_ed_idx = int(np.ceil(ridx/dx)-1)
     c_sol[0,pulse_st_idx:pulse_ed_idx + 1] = c0 * np.ones((1,pulse_ed_idx-pulse_st_idx + 1))
     for n in range(1,nt_len + 1):
         c_sol[n,:] = c_sol[n-1,:] - sigma * (c_sol[n-1,:]-np.roll(c_sol[n-1,:],1))
@@ -44,11 +47,10 @@ def EulerUpwind(dx,dt,nt_len):
 
 ##diffusion
 def LaxWendroff(dx,dt,nt_len):
-    sigma = u0 * dt/dx #$\leq$ 1
-    nx_len = int(2500/dx)
+    nx_len = int(L/dx)
     c_sol = np.zeros((nt_len + 1,nx_len))
-    pulse_st_idx = int(np.floor(1125/dx + 1)-1)
-    pulse_ed_idx = int(np.ceil(1375/dx)-1)
+    pulse_st_idx = int(np.floor(lidx/dx + 1)-1)
+    pulse_ed_idx = int(np.ceil(ridx/dx)-1)
     c_sol[0,pulse_st_idx:pulse_ed_idx + 1] = c0 * np.ones((1,pulse_ed_idx-pulse_st_idx + 1))
     for n in range(1,nt_len + 1):
         c_sol[n,:] = c_sol[n-1,:] - sigma/2 * (np.roll(c_sol[n-1,:],-1)-np.roll(c_sol[n-1,:],1)) + np.power(sigma,2)/2 * (np.roll(c_sol[n-1,:],-1)-2 * c_sol[n-1,:] + np.roll(c_sol[n-1,:],1))
@@ -74,53 +76,88 @@ def Forward(vec0, func, dt, type):
             vec1 = vec0 + (0.5 * dvecdt0 + 0.5 * dvecdt1_) * dt
     return vec1
 
-def Spectral(dx,dt,nt_len):
-    sigma = u0 * dt/dx
-    nx_len = int(2500/dx)
-    nj_len = int(nx_len/2) + 1
-    c_sol = np.zeros((nt_len + 1,nx_len))
 
-    #spectral coeff
-    ck_sol = 1j *  np.zeros((nt_len + 1,nj_len))
-    pulse_st_idx = int(np.floor(1125/dx + 1)-1)
-    pulse_ed_idx = int(np.ceil(1375/dx)-1)
-    c_sol[0,pulse_st_idx:pulse_ed_idx + 1] = c0 * np.ones((1,pulse_ed_idx-pulse_st_idx + 1))
-    cks0 = 1j * np.ones((1,nj_len))
-    cks0[0,0] = np.mean(c_sol[0,:])
-    
-    jvec = np.reshape(np.arange(1, nx_len + 1),(nx_len,1))
-    kvec = np.reshape(np.arange(1, nj_len),(1,nj_len-1))
-    ft_coef = (2/nx_len) * np.exp(-1j * (2 * np.pi/nx_len) * np.matrix(jvec * kvec))
-    cks0[0,1:] = np.matrix(c_sol[0,:] * ft_coef)
-    ck_sol[0,:] = cks0
-    
-    for n in range(1,nt_len + 1):
-        ck_sol[n,:] = Forward(ck_sol[n-1,:], dckdt, dt, schemeFlag)
+#spectral with numpy's fft alg
+def Spectral(dx, dt, nt_len):
+	nx_len = int(L / dx)
+	nj_len = nx_len # // 2 + 1  # Include Nyquist component
 
-    jvec1 = np.reshape(np.arange(1, nx_len + 1),(1,nx_len))
-    kvec1 = np.reshape(np.arange(0, nj_len),(nj_len,1))
-    c_sol = np.real(np.matrix(ck_sol * (np.exp( 1j * (2 * np.pi/nx_len) * np.matrix(kvec1 * jvec1)))))
-    return c_sol
+	# Arrays for the transform
+	c_sol = np.zeros((nt_len + 1, nx_len))
+	ck_sol = np.zeros((nt_len + 1, nj_len), dtype=complex)
 
+	#c_sol init stuff
+	pulse_st_idx = int(np.floor(lidx/dx + 1)-1)
+	pulse_ed_idx = int(np.ceil(ridx/dx)-1)
+	c_sol[0, pulse_st_idx:pulse_ed_idx + 1] = c0 * np.ones((1,pulse_ed_idx-pulse_st_idx + 1))
+
+
+	# Wavenumber
+	k = np.fft.fftfreq(nx_len) * (2 * np.pi / L)
+
+	# Initial condition in spectral space
+	ck_sol[0, :] = np.fft.fft(c_sol[0, :]) * dx / (nj_len - 1)
+
+	for n in range(1, nt_len + 1):
+		# Time evolution in spectral space using Forward func
+		ck_sol[n, :] = Forward(ck_sol[n-1, :], dckdt, dt, schemeFlag)
+
+		# Back to real space
+		c_sol[n, :] = np.real(np.fft.ifft(ck_sol[n, :] * (nj_len - 1) / dx))
+
+	return c_sol
+
+
+print(Spectral(dx,dt,nt_len))
 
 
 #calls
 c_sol_euler = EulerUpwind(dx,dt,nt_len)
 c_sol_LaxWendroff = LaxWendroff(dx,dt,nt_len)
 c_sol_Spectral = Spectral(dx,dt,nt_len)
-print(c_sol_Spectral)
 
 
 
 #plots
-plt.figure("euler")
-
-#euler plot
-plt.title("euler 0")
-plt.plot(x_axis, c_sol_euler[0,:], ".r")
+##euler concentration plat
+plt.figure("eulerC")
+plt.title("eulerC")
+plt.plot(x_axis, c_sol_euler[0,:], "o-r", label="0")
+plt.plot(x_axis, c_sol_euler[100,:], "o-g", label="100")
+plt.plot(x_axis, c_sol_euler[200,:], "o-b", label="200")
+plt.plot(x_axis, c_sol_euler[500,:], "o-c", label="500")
+plt.plot(x_axis, c_sol_euler[1000,:], "o-m", label="1000")
+plt.plot(x_axis, c_sol_euler[1500,:], "o-y", label="1500")
+plt.plot(x_axis, c_sol_euler[2000,:], "o-k", label="2000")
 plt.xlabel('x\n(km)')
 plt.ylabel('$C$\n($C_{0}$)')
+plt.legend(loc="upper left")
 
+##laxWen con plot
+plt.figure("laxWenC")
+plt.title("laxWenC")
+plt.plot(x_axis, c_sol_LaxWendroff[0,:], "o-r", label="0")
+plt.plot(x_axis, c_sol_LaxWendroff[10,:], "o-g", label="10")
+plt.plot(x_axis, c_sol_LaxWendroff[50,:], "o-b", label="50")
+plt.plot(x_axis, c_sol_LaxWendroff[200,:], "o-c", label="200")
+plt.plot(x_axis, c_sol_LaxWendroff[500,:], "o-m", label="500")
+plt.plot(x_axis, c_sol_LaxWendroff[1500,:], "o-y", label="1500")
+plt.plot(x_axis, c_sol_LaxWendroff[2000,:], "o-k", label="2000")
+plt.xlabel('x\n(km)')
+plt.ylabel('$C$\n($C_{0}$)')
+plt.legend()
+
+##Spectral con plot
+plt.figure("SpectralC " + schemeFlag)
+plt.title("SpectralC " + schemeFlag)
+plt.plot(x_axis, c_sol_Spectral[0,:], "o-r", label="0")
+plt.plot(x_axis, c_sol_Spectral[10,:], "o-b", label="10")
+plt.plot(x_axis, c_sol_Spectral[20,:], "o-g", label="20")
+plt.plot(x_axis, c_sol_Spectral[50,:], "o-c", label="50")
+plt.plot(x_axis, c_sol_Spectral[100,:], "o-m", label="100")
+plt.xlabel('x\n(km)')
+plt.ylabel('$C$\n($C_{0}$)')
+plt.legend()
 
 
 #Euler Hovmoller diagram
@@ -141,7 +178,7 @@ colorMesh  = plt.pcolormesh(xx, tt, c_sol_euler, cmap="ocean", vmin=cmin, vmax=c
 tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
 tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
 
-colorBar = plt.colorbar(colorMesh, orientation="vertical")
+colorBar = plt.colorbar(colorMesh)
 colorBar.set_label(label='\n$C$\n($C_{0}$)')
 plt.xlabel('x\n(km)')
 plt.ylabel('time\n(s)')
@@ -162,7 +199,7 @@ tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np
 tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
 
 #colorBar setup
-laxColorBarf = plt.colorbar(laxColorMesh, orientation="vertical")
+laxColorBarf = plt.colorbar(laxColorMesh)
 laxColorBarf.set_label('\n$C$\n($C_{0}$)')
 plt.xlabel('x\n(km)')
 plt.ylabel('time\n(s)')
@@ -170,8 +207,8 @@ plt.ylabel('time\n(s)')
 
 
 #Spectral Hovmoller diagram
-plt.figure("SpectralHov")
-plt.title('Hovmoller diagram, Spectral, ')
+plt.figure("SpectralHov_" + schemeFlag)
+plt.title('Hovmoller diagram, Spectral, ' + schemeFlag)
 
 #normalize the colormap
 cmin = np.amin(c_sol_Spectral)
@@ -183,11 +220,10 @@ tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np
 tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='w', lw=3)
 
 #color setup
-cb = plt.colorbar(colourMesh, orientation="vertical")
+cb = plt.colorbar(colourMesh)
 cb.set_label(label='\n$C$\n($C_{0}$)')
 plt.xlabel('x\n(km)')
 plt.ylabel('time\n(s)')
-
 
 
 #render plots
