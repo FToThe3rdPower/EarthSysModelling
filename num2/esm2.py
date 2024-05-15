@@ -10,9 +10,15 @@ u0 = 0.01 #10/1000 # km/s but 5km/min seems pretty fast, that's 300km/hr...
 c0 = 1
 L = 2500 #km
 
-#D#efault dx = 25km, dckdt overflow occurs for dt > 1000s
+#Default dx = 25km, dckdt overflow occurs for dt > 1000s
 dx = 25 #km
-dt = 100 #s 300
+#for the loop over dx's to see the effect on the schemes
+rangeMax = 500
+dxRange = np.arange(100, rangeMax, 100, dtype=int)
+
+dt = 100 #s default 300
+dtRangeMax = 500
+dtRange = np.arange(100, rangeMax, 100, dtype=int)
 
 ridx = 1375
 cidx = 1250
@@ -108,122 +114,214 @@ def Spectral(dx, dt, nt_len):
 	return c_sol
 
 
-print(Spectral(dx,dt,nt_len))
 
 
 #calls
 c_sol_euler = EulerUpwind(dx,dt,nt_len)
 c_sol_LaxWendroff = LaxWendroff(dx,dt,nt_len)
-c_sol_Spectral = Spectral(dx,dt,nt_len)
 
 
 
-#plots
-##euler concentration plat
-plt.figure("eulerC")
-plt.title("eulerC")
-plt.plot(x_axis, c_sol_euler[0,:], "o-r", label="0")
-plt.plot(x_axis, c_sol_euler[100,:], "o-g", label="100")
-plt.plot(x_axis, c_sol_euler[200,:], "o-b", label="200")
-plt.plot(x_axis, c_sol_euler[500,:], "o-c", label="500")
-plt.plot(x_axis, c_sol_euler[1000,:], "o-m", label="1000")
-plt.plot(x_axis, c_sol_euler[1500,:], "o-y", label="1500")
-plt.plot(x_axis, c_sol_euler[2000,:], "o-k", label="2000")
-plt.xlabel('x\n(km)')
-plt.ylabel('$C$\n($C_{0}$)')
-plt.legend(loc="upper left")
+# #plots
+# ##euler concentration plat
+# plt.figure("eulerC")
+# plt.title("euler concentration, dx = "+str(dx))
+# plt.plot(x_axis, c_sol_euler[0,:], "o-r", label="0")
+# plt.plot(x_axis, c_sol_euler[100,:], "o-g", label="100")
+# plt.plot(x_axis, c_sol_euler[200,:], "o-b", label="200")
+# plt.plot(x_axis, c_sol_euler[500,:], "o-c", label="500")
+# plt.plot(x_axis, c_sol_euler[1000,:], "o-m", label="1000")
+# plt.plot(x_axis, c_sol_euler[1500,:], "o-y", label="1500")
+# plt.plot(x_axis, c_sol_euler[2000,:], "o-k", label="2000")
+# plt.xlabel('x\n(km)')
+# plt.ylabel('$C$\n($C_{0}$)')
+# plt.legend(loc="upper left")
 
-##laxWen con plot
-plt.figure("laxWenC")
-plt.title("laxWenC")
-plt.plot(x_axis, c_sol_LaxWendroff[0,:], "o-r", label="0")
-plt.plot(x_axis, c_sol_LaxWendroff[10,:], "o-g", label="10")
-plt.plot(x_axis, c_sol_LaxWendroff[50,:], "o-b", label="50")
-plt.plot(x_axis, c_sol_LaxWendroff[200,:], "o-c", label="200")
-plt.plot(x_axis, c_sol_LaxWendroff[500,:], "o-m", label="500")
-plt.plot(x_axis, c_sol_LaxWendroff[1500,:], "o-y", label="1500")
-plt.plot(x_axis, c_sol_LaxWendroff[2000,:], "o-k", label="2000")
-plt.xlabel('x\n(km)')
-plt.ylabel('$C$\n($C_{0}$)')
+# ##laxWen con plot
+# plt.figure("laxWenC")
+# plt.title("laxWen concen. dx = "+str(dx))
+# plt.plot(x_axis, c_sol_LaxWendroff[0,:], "o-r", label="0")
+# plt.plot(x_axis, c_sol_LaxWendroff[10,:], "o-g", label="10")
+# plt.plot(x_axis, c_sol_LaxWendroff[50,:], "o-b", label="50")
+# plt.plot(x_axis, c_sol_LaxWendroff[200,:], "o-c", label="200")
+# plt.plot(x_axis, c_sol_LaxWendroff[500,:], "o-m", label="500")
+# plt.plot(x_axis, c_sol_LaxWendroff[1500,:], "o-y", label="1500")
+# plt.plot(x_axis, c_sol_LaxWendroff[2000,:], "o-k", label="2000")
+# plt.xlabel('x\n(km)')
+# plt.ylabel('$C$\n($C_{0}$)')
+# plt.legend()
+
+
+# #Euler Hovmoller diagram
+# plt.figure("eulerHov")
+# plt.title("Hovmoller diagram, dx = " + str(dx) +"\nEuler method forward in time and space")
+
+# #normalize the colormap
+# cmin = np.amin(c_sol_euler)
+# cmax = np.amax(c_sol_euler)
+
+# #make the grid for the trace lines
+# xx, tt = np.meshgrid(x_axis, t_axis)
+
+# #plot the results
+# colorMesh  = plt.pcolormesh(xx, tt, c_sol_euler, cmap="ocean", vmin=cmin, vmax=cmax)
+
+# #add the trace lines
+# tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
+# tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
+
+# colorBar = plt.colorbar(colorMesh)
+# colorBar.set_label(label='\n$C$\n($C_{0}$)')
+# plt.xlabel('x\n(km)')
+# plt.ylabel('time\n(s)')
+
+
+
+# #Lax-Wendroff Hovmoller diagram
+# plt.figure("laxWendHov")
+# plt.title('Hovmoller diagram, dx = ' +str(dx)+' Lax-Wendroff')
+
+# #normalize the colormap
+# cmin = np.amin(c_sol_LaxWendroff)
+# cmax = np.amax(c_sol_LaxWendroff)
+
+# xx, tt = np.meshgrid(x_axis, t_axis)
+# laxColorMesh = plt.pcolormesh(xx, tt, c_sol_LaxWendroff, cmap="ocean",  vmin=cmin, vmax=cmax)
+# tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
+# tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
+
+# #colorBar setup
+# laxColorBarf = plt.colorbar(laxColorMesh)
+# laxColorBarf.set_label('\n$C$\n($C_{0}$)')
+# plt.xlabel('x\n(km)')
+# plt.ylabel('time\n(s)')
+
+
+
+# # Plotting separate figures for each scheme
+# plt.figure("eulerDX")
+
+# ## Loop over dx values
+# for dx in dxRange:
+
+# 	print(dx)
+# 	# Calculate sigma based on the current dx
+# 	sigma = u0 * dt / dx
+
+# 	# Calculate solution for Euler 
+# 	c_sol_euler = EulerUpwind(dx, dt, nt_len)
+
+# 	# Plot Euler solutions
+# 	plt.plot(c_sol_euler[-1, :], label=dx)
+# plt.xlabel("dx (km)")
+# plt.ylabel("Final Concentration")
+# plt.title("Concentration, Euler FWD " + schemeFlag)
+# plt.legend()
+
+
+
+# # Plotting separate figures for each scheme
+# plt.figure("LaxWendroffDX")
+
+# ## Loop over dx values
+# for dx in dxRange:
+
+# 	print(dx)
+# 	# Calculate sigma based on the current dx
+# 	sigma = u0 * dt / dx
+
+# 	# Calculate solution for Euler 
+# 	c_sol_laxw = LaxWendroff(dx, dt, nt_len)
+
+
+# 	# Plot final concentration
+# 	plt.plot(c_sol_laxw[-1, :], label=dx)
+# plt.xlabel("dx (km)")
+# plt.ylabel("Final Concentration")
+# plt.title("Concentration, LaxWendroff")
+# plt.legend()
+
+
+
+
+# Plotting separate figures for each scheme
+plt.figure("eulerDT")
+
+## Loop over dx values
+for dt in dtRange:
+	nt_len =  int((L/u0)/dt)
+
+	# Calculate sigma based on the current dx
+	sigma = u0 * dt / dx
+
+	# Calculate solution for Euler 
+	c_sol_euler = EulerUpwind(dx, dt, nt_len)
+
+	# Plot Euler solutions
+	plt.plot(c_sol_euler[-1, :], label=dt)
+plt.xlabel("dt (s)")
+plt.ylabel("Final Concentration")
+plt.title("Concentration, Euler FWD " + schemeFlag)
 plt.legend()
 
-##Spectral con plot
-plt.figure("SpectralC " + schemeFlag)
-plt.title("SpectralC " + schemeFlag)
-plt.plot(x_axis, c_sol_Spectral[0,:], "o-r", label="0")
-plt.plot(x_axis, c_sol_Spectral[10,:], "o-b", label="10")
-plt.plot(x_axis, c_sol_Spectral[20,:], "o-g", label="20")
-plt.plot(x_axis, c_sol_Spectral[50,:], "o-c", label="50")
-plt.plot(x_axis, c_sol_Spectral[100,:], "o-m", label="100")
-plt.xlabel('x\n(km)')
-plt.ylabel('$C$\n($C_{0}$)')
+
+
+# Plotting separate figures for each scheme
+plt.figure("LaxWendroffDT")
+
+## Loop over dx values
+for dt in dtRange:
+	nt_len =  int((L/u0)/dt)
+
+	# Calculate sigma based on the current dx
+	sigma = u0 * dt / dx
+
+	# Calculate solution for Euler 
+	c_sol_laxw = LaxWendroff(dx, dt, nt_len)
+
+
+	# Plot final concentration
+	plt.plot(c_sol_laxw[-1, :], label=dt)
+plt.xlabel("dt (s)")
+plt.ylabel("Final Concentration")
+plt.title("Concentration, LaxWendroff")
 plt.legend()
 
 
-#Euler Hovmoller diagram
-plt.figure("eulerHov")
-plt.title('Hovmoller diagram\nEuler method forward in time and space')
+#spectral stuff brushed under the rug
+#print(Spectral(dx,dt,nt_len))
+#c_sol_Spectral = Spectral(dx,dt,nt_len)
 
-#normalize the colormap
-cmin = np.amin(c_sol_euler)
-cmax = np.amax(c_sol_euler)
+# ##Spectral con plot
+# plt.figure("SpectralC " + schemeFlag)
+# plt.title("SpectralC " + schemeFlag)
+# plt.plot(x_axis, c_sol_Spectral[0,:], "o-r", label="0")
+# plt.plot(x_axis, c_sol_Spectral[10,:], "o-b", label="10")
+# plt.plot(x_axis, c_sol_Spectral[20,:], "o-g", label="20")
+# plt.plot(x_axis, c_sol_Spectral[50,:], "o-c", label="50")
+# plt.plot(x_axis, c_sol_Spectral[100,:], "o-m", label="100")
+# plt.xlabel('x\n(km)')
+# plt.ylabel('$C$\n($C_{0}$)')
+# plt.legend()
 
-#make the grid for the trace lines
-xx, tt = np.meshgrid(x_axis, t_axis)
+# #Spectral Hovmoller diagram
+# plt.figure("SpectralHov_" + schemeFlag)
+# plt.title('Hovmoller diagram, Spectral, ' + schemeFlag)
 
-#plot the results
-colorMesh  = plt.pcolormesh(xx, tt, c_sol_euler, cmap="ocean", vmin=cmin, vmax=cmax)
+# #normalize the colormap
+# cmin = np.amin(c_sol_Spectral)
+# cmax = np.amax(c_sol_Spectral)
 
-#add the trace lines
-tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
-tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
+# xx, tt = np.meshgrid(x_axis, t_axis)
+# colourMesh = plt.pcolormesh(xx, tt, c_sol_Spectral, cmap = "ocean", vmin=cmin, vmax=cmax)
+# tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='w', lw=3)
+# tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='w', lw=3)
 
-colorBar = plt.colorbar(colorMesh)
-colorBar.set_label(label='\n$C$\n($C_{0}$)')
-plt.xlabel('x\n(km)')
-plt.ylabel('time\n(s)')
-
-
-
-#Lax-Wendroff Hovmoller diagram
-plt.figure("laxWendHov")
-plt.title('Hovmoller diagram, Lax-Wendroff')
-
-#normalize the colormap
-cmin = np.amin(c_sol_LaxWendroff)
-cmax = np.amax(c_sol_LaxWendroff)
-
-xx, tt = np.meshgrid(x_axis, t_axis)
-laxColorMesh = plt.pcolormesh(xx, tt, c_sol_LaxWendroff, cmap="ocean",  vmin=cmin, vmax=cmax)
-tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='r', lw=3)
-tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='r', lw=3)
-
-#colorBar setup
-laxColorBarf = plt.colorbar(laxColorMesh)
-laxColorBarf.set_label('\n$C$\n($C_{0}$)')
-plt.xlabel('x\n(km)')
-plt.ylabel('time\n(s)')
-
-
-
-#Spectral Hovmoller diagram
-plt.figure("SpectralHov_" + schemeFlag)
-plt.title('Hovmoller diagram, Spectral, ' + schemeFlag)
-
-#normalize the colormap
-cmin = np.amin(c_sol_Spectral)
-cmax = np.amax(c_sol_Spectral)
-
-xx, tt = np.meshgrid(x_axis, t_axis)
-colourMesh = plt.pcolormesh(xx, tt, c_sol_Spectral, cmap = "ocean", vmin=cmin, vmax=cmax)
-tracerline1_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c > cidx)[0]], t_axis[np.where(u0_tracer_c > cidx)[0]], color='w', lw=3)
-tracerline2_c = plt.plot(u0_tracer_c[np.where(u0_tracer_c < cidx)[0]], t_axis[np.where(u0_tracer_c < cidx)[0]], color='w', lw=3)
-
-#color setup
-cb = plt.colorbar(colourMesh)
-cb.set_label(label='\n$C$\n($C_{0}$)')
-plt.xlabel('x\n(km)')
-plt.ylabel('time\n(s)')
+# #color setup
+# cb = plt.colorbar(colourMesh)
+# cb.set_label(label='\n$C$\n($C_{0}$)')
+# plt.xlabel('x\n(km)')
+# plt.ylabel('time\n(s)')
 
 
 #render plots
